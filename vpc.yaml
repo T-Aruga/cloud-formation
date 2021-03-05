@@ -1,3 +1,40 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: "Let's build a VPC environment using AWS CloudFormation!"
+
+Parameters:
+  Project:
+    Type: String
+    Default: techpit
+    Description: Enter the project name.
+
+  Env:
+    Type: String
+    Default: staging
+    AllowedValues:
+      - production
+      - development
+      - staging
+    Description: Enter the environment.
+
+Outputs:
+  VpcId:
+    Description: The VPC's ID.
+    Value: !Ref tpVPC
+    Export:
+      Name: !Join [ "-", [ !Ref Project, !Ref Env, VPCID ] ]
+
+  VpcCiderBlock:
+    Description: This is the segmentation of the NW.
+    Value: !GetAtt tpVPC.CidrBlock
+    Export:
+      Name: !Join [ "-", [ !Ref Project, !Ref Env, CiderBlock ] ]
+
+  Igw:
+    Description: The IGW's ID
+    Value: !Ref tpInternetGateway
+    Export:
+      Name: !Join [ "-", [ !Ref Project, !Ref Env, IGWID ] ]
+
 Resources:
 
 #=================================
@@ -11,7 +48,7 @@ Resources:
       EnableDnsHostnames: 'true'
       Tags:
       - Key: Name
-        Value: techpit
+        Value: !Join [ "-", [ !Ref Project, !Ref Env ] ]
 #=================================
 # インターネットゲートウェイの作成
 #=================================
@@ -20,7 +57,7 @@ Resources:
     Properties:
       Tags:
       - Key: Name
-        Value: techpit
+        Value: !Join [ "-", [ !Ref Project, !Ref Env ] ]
 
   tpAttachGateway:
     Type: "AWS::EC2::VPCGatewayAttachment"
@@ -38,7 +75,7 @@ Resources:
       SubnetId: !Ref tpSubnet01a
       Tags:
       - Key: Name
-        Value: techpita
+        Value: !Join [ "-", [ !Ref Project, !Ref Env, a ] ]
 
   tpEIPNata:
     Type: "AWS::EC2::EIP"
@@ -52,7 +89,7 @@ Resources:
       SubnetId: !Ref tpSubnet01c
       Tags:
       - Key: Name
-        Value: techpitc
+        Value: !Join [ "-", [ !Ref Project, !Ref Env, c ] ]
 
   tpEIPNatc:
     Type: "AWS::EC2::EIP"
@@ -66,7 +103,7 @@ Resources:
       SubnetId: !Ref tpSubnet01d
       Tags:
       - Key: Name
-        Value: techpitd
+        Value: !Join [ "-", [ !Ref Project, !Ref Env, d ] ]
 
   tpEIPNatd:
     Type: "AWS::EC2::EIP"
@@ -183,6 +220,7 @@ Resources:
 
   tpRoute01:
     Type: "AWS::EC2::Route"
+    DependsOn: tpAttachGateway
     Properties:
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref tpInternetGateway
